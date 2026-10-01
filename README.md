@@ -6,6 +6,20 @@ Desktop notifications for SteamOS updates in KDE Desktop Mode. Normally, SteamOS
 - Shows a notification that stays in the KDE notification tray, with an **Update now** button.
 - Clicking it opens Konsole and runs `atomupd-manager update <ID>`. When the update finishes, a second notification offers **Reboot now**.
 
+## Screenshots
+
+A notification pops up when an update is available:
+
+![Update available notification](screenshots/update_avail_timed.png)
+
+It stays in the notification tray until you act on it:
+
+![Notification in the KDE tray](screenshots/update_avail_tray.png)
+
+**Update now** opens Konsole and installs the update:
+
+<img src="screenshots/update_now.png" alt="Update running in Konsole" width="700">
+
 ## Install
 
 ```sh
