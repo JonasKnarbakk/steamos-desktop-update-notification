@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 # Installs from the local checkout if run from one, otherwise downloads the main branch:
-# curl -fsSL https://raw.githubusercontent.com/JonasKnarbakk/steamos-dekstop-update-notification/main/install.sh | bash
+# curl -fsSL https://raw.githubusercontent.com/JonasKnarbakk/steamos-desktop-update-notification/main/install.sh | bash
 
 set -euo pipefail
 
-REPO="JonasKnarbakk/steamos-dekstop-update-notification"
+REPO="JonasKnarbakk/steamos-desktop-update-notification"
 TARBALL="https://github.com/${REPO}/archive/refs/heads/main.tar.gz"
 
 # Wrapped in a function so a partially downloaded script never runs.

@@ -1,8 +1,8 @@
-# SteamOS Dekstop Update Notification
+# SteamOS Desktop Update Notification
 
 Desktop notifications for SteamOS updates in KDE Desktop Mode. Normally, SteamOS update notifications only show up in Gaming Mode.
 
-- Checks for updates every 6 hours and 2 minutes after login, using `atomupd-manager`.
+- Checks for updates with `atomupd-manager` 2 minutes after login, then every 6 hours.
 - Shows a notification that stays in the KDE notification tray, with an **Update now** button.
 - Clicking it opens Konsole and runs `atomupd-manager update <ID>`. When the update finishes, a second notification offers **Reboot now**.
 
@@ -23,7 +23,7 @@ It stays in the notification tray until you act on it:
 ## Install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/JonasKnarbakk/steamos-dekstop-update-notification/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/JonasKnarbakk/steamos-desktop-update-notification/main/install.sh | bash
 ```
 
 Or from a local clone:
