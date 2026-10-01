@@ -3,6 +3,48 @@
 # Check for SteamOS updates and show a persistent KDE notification with action buttons.
 # Set STEAMOS_NOTIFY_DEBUG=1 to also get a notification when no update is available.
 
+# Runs inside the Konsole window: performs the update and prints extra context around
+# atomupd-manager's progress output. Handled before the lock, which the parent holds.
+if [[ "$1" == "--run-update" ]]; then
+    local id="$2"
+    local bold=$'\e[1m' green=$'\e[32m' red=$'\e[31m' reset=$'\e[0m'
+    source /etc/os-release 2>/dev/null
+
+    echo "${bold}=== SteamOS Update ===${reset}"
+    echo
+    echo "Current version:  ${VERSION_ID:-unknown} (build ${BUILD_ID:-unknown})"
+    echo "Target build:     ${id:-unknown}"
+    if [[ -n "${UPDATE_DETAILS}" ]]; then
+        echo
+        echo "${bold}Update details:${reset}"
+        sed 's/^/  /' <<< "${UPDATE_DETAILS}"
+    fi
+    echo
+    echo "Started at $(date '+%H:%M:%S'). Downloading and applying the update."
+    echo
+
+    start=${SECONDS}
+    atomupd-manager update ${id}
+    rc=$?
+    elapsed=$(( SECONDS - start ))
+    status=$(atomupd-manager get-update-status 2>/dev/null)
+
+    echo
+    echo "Finished at $(date '+%H:%M:%S') after $(( elapsed / 60 ))m $(( elapsed % 60 ))s."
+    echo "atomupd-manager exit code: ${rc}, update status: ${status:-unknown}"
+    echo
+    if [[ "${status}" == "successful" ]]; then
+        echo "${green}${bold}Update installed successfully.${reset}"
+        echo "Close this window, then use the notification to reboot into build ${id}."
+    else
+        echo "${red}${bold}Update did not complete.${reset}"
+        echo "Check the output above, or the logs with: journalctl -b -u atomupd"
+    fi
+    echo
+    read -rp "Press Enter to close"
+    exit 0
+fi
+
 # Only one instance at a time. The lock is held while a notification is waiting for a click.
 # Additional instances triggered by the systemd timer exit early.
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/steamos-update-notify.lock"
@@ -45,7 +87,7 @@ run_update() {
     local cmd="atomupd-manager update ${id}"
     if command -v konsole >/dev/null; then
         # --separate so the call blocks until the window is closed
-        konsole --separate -p tabtitle="SteamOS Update" -e bash -c "${cmd}; echo; read -rp 'Press Enter to close'"
+        konsole --separate -p tabtitle="SteamOS Update" -e "$(realpath "$0")" --run-update "${id}"
     else
         notify -i system-software-update "${APP_NAME}" "Installing update ${id}..."
         ${cmd}
