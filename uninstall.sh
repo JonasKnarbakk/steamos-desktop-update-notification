@@ -3,7 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-systemctl --user disable --now steamos-update-notify.timer
+if systemctl --user list-unit-files steamos-update-notify.timer &>/dev/null; then
+    systemctl --user disable --now steamos-update-notify.timer
+fi
 
 rm -f "${HOME}/.local/bin/steamos-update-notify"
 rm -f "${XDG_DATA_HOME:-${HOME}/.local/share}/applications/steamos-update-notify.desktop"
