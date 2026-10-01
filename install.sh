@@ -16,7 +16,9 @@ main() {
     if [[ ! -f "${src}/steamos-update-notify.sh" ]]; then
         local tmp
         tmp="$(mktemp -d)"
-        trap 'rm -rf "${tmp}"' EXIT
+        # Expand now: the EXIT trap runs after main returns, when the local is gone.
+        # shellcheck disable=SC2064
+        trap "rm -rf $(printf '%q' "${tmp}")" EXIT
         echo "Downloading ${TARBALL}"
         curl -fsSL "${TARBALL}" | tar -xz -C "${tmp}" --strip-components=1
         src="${tmp}"
