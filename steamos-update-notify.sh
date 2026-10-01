@@ -6,17 +6,17 @@
 # Runs inside the Konsole window: performs the update and prints extra context around
 # atomupd-manager's progress output. Handled before the lock, which the parent holds.
 if [[ "$1" == "--run-update" ]]; then
-    local id="$2"
-    local bold=$'\e[1m' green=$'\e[32m' red=$'\e[31m' reset=$'\e[0m'
+    TARGET="$2"
+    BOLD=$'\e[1m' green=$'\e[32m' red=$'\e[31m' reset=$'\e[0m'
     source /etc/os-release 2>/dev/null
 
-    echo "${bold}=== SteamOS Update ===${reset}"
+    echo "${BOLD}=== SteamOS Update ===${reset}"
     echo
     echo "Current version:  ${VERSION_ID:-unknown} (build ${BUILD_ID:-unknown})"
-    echo "Target build:     ${id:-unknown}"
+    echo "Target build:     ${TARGET:-unknown}"
     if [[ -n "${UPDATE_DETAILS}" ]]; then
         echo
-        echo "${bold}Update details:${reset}"
+        echo "${BOLD}Update details:${reset}"
         sed 's/^/  /' <<< "${UPDATE_DETAILS}"
     fi
     echo
@@ -24,7 +24,7 @@ if [[ "$1" == "--run-update" ]]; then
     echo
 
     start=${SECONDS}
-    atomupd-manager update ${id}
+    atomupd-manager update "${TARGET}"
     rc=$?
     elapsed=$(( SECONDS - start ))
     status=$(atomupd-manager get-update-status 2>/dev/null)
@@ -34,10 +34,10 @@ if [[ "$1" == "--run-update" ]]; then
     echo "atomupd-manager exit code: ${rc}, update status: ${status:-unknown}"
     echo
     if [[ "${status}" == "successful" ]]; then
-        echo "${green}${bold}Update installed successfully.${reset}"
-        echo "Close this window, then use the notification to reboot into build ${id}."
+        echo "${green}${BOLD}Update installed successfully.${reset}"
+        echo "Close this window, then use the notification to reboot into build ${TARGET}."
     else
-        echo "${red}${bold}Update did not complete.${reset}"
+        echo "${red}${BOLD}Update did not complete.${reset}"
         echo "Check the output above, or the logs with: journalctl -b -u atomupd"
     fi
     echo
