@@ -57,7 +57,6 @@ NOTIFY_ARGS=(
   -h string:desktop-entry:steamos-update-notify
   -h boolean:transient:false
   -u normal
-  -t 0
 )
 
 notify()
