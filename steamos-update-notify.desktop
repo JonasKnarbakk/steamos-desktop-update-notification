@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=SteamOS Updates
+Comment=Check for SteamOS updates
+Icon=system-software-update
+Exec=systemctl --user start steamos-update-notify.service
+NoDisplay=false
+Categories=System;
+X-GNOME-UsesNotifications=true

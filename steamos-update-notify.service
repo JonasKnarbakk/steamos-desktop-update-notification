@@ -1,0 +1,10 @@
+[Unit]
+Description=Check for SteamOS updates and notify
+# Only meaningful inside a graphical (Desktop Mode) session
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+# Not oneshot: the script stays alive while the notification waits for a click
+Type=exec
+ExecStart=%h/.local/bin/steamos-update-notify
