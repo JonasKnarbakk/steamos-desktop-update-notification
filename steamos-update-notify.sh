@@ -93,27 +93,47 @@ run_update() {
     fi
 
     case "$(atomupd-manager get-update-status 2>/dev/null)" in
-        successful) offer_reboot ;;
-        *) notify -i dialog-error "SteamOS update failed" \
-               "Update ${id} did not complete. Run 'atomupd-manager update ${id}' manually for details." ;;
+        successful)
+            # Remember which build was applied during this boot
+            mkdir -p "$(dirname "${PENDING_FILE}")"
+            echo "$(< /proc/sys/kernel/random/boot_id) ${id}" > "${PENDING_FILE}"
+            offer_reboot
+            ;;
+        *)
+            notify -i dialog-error "SteamOS update failed" \
+               "Update ${id} did not complete. Run 'atomupd-manager update ${id}' manually for details."
+            ;;
     esac
 }
 
-# An update was already applied but the system has not been rebooted yet.
-case "$(atomupd-manager get-update-status 2>/dev/null)" in
-    successful)
+# Prints the build ID applied by this script during the current boot, if any.
+pending_build() {
+    local boot
+    local id
+    read -r boot id < "${PENDING_FILE}" 2>/dev/null || return
+    [[ "${boot}" == "$(< /proc/sys/kernel/random/boot_id)" ]] && echo "${id}"
+}
+
+PENDING_FILE="${XDG_STATE_HOME:-${HOME}/.local/state}/steamos-update-notify/pending"
+UPDATE_STATE=$(atomupd-manager get-update-status 2>/dev/null)
+
+if [[ "${UPDATE_STATE}" == "in_progress" ]]; then
+    echo "Update already in progress."
+    exit 0
+fi
+
+# Check for updates first: "successful" can be stale, e.g. after switching branch,
+# so a newly available update takes priority over a pending reboot.
+UPDATE_STATUS=$(atomupd-manager check 2>/dev/null) || exit 0
+ID=$(grep -oP 'ID:\s*\K\S+' <<< "${UPDATE_STATUS}" | head -n1)
+
+if [[ -z "${UPDATE_STATUS}" || "${UPDATE_STATUS}" == *"No update available"* ]] \
+    || [[ -n "${ID}" && "${ID}" == "$(pending_build)" ]]; then
+    # Nothing new to install. Offer a reboot if an update has been applied.
+    if [[ "${UPDATE_STATE}" == "successful" ]]; then
         offer_reboot
         exit 0
-        ;;
-    in_progress)
-        echo "Update already in progress."
-        exit 0
-        ;;
-esac
-
-UPDATE_STATUS=$(atomupd-manager check 2>/dev/null) || exit 0
-
-if [[ -z "${UPDATE_STATUS}" || "${UPDATE_STATUS}" == *"No update available"* ]]; then
+    fi
     echo "No update available"
     if [[ -n "${STEAMOS_NOTIFY_DEBUG}" ]]; then
         notify -i system-software-update "SteamOS" "No update available"
@@ -121,7 +141,8 @@ if [[ -z "${UPDATE_STATUS}" || "${UPDATE_STATUS}" == *"No update available"* ]];
     exit 0
 fi
 
-ID=$(grep -oP 'ID:\s*\K\S+' <<< "${UPDATE_STATUS}" | head -n1)
+# Shown in the Konsole update window
+export UPDATE_DETAILS="${UPDATE_STATUS}"
 
 choice=$(ask -i system-software-update \
     -A update="Update now" \
